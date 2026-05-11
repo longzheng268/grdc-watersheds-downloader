@@ -88,9 +88,11 @@ def unzip_file(zip_path, extract_dir):
 
 
 def main():
-    # 代理设置 (如果需要)
-    proxy = "http://127.0.0.1:7890"  # 设置为 None 如果不需要代理
-    # proxy = None
+    # ============================================================
+    # 代理设置: 国内访问 GRDC 较慢时可开启, 不需要则设为 None
+    # ============================================================
+    proxy = None
+    # proxy = "http://127.0.0.1:7890"
 
     if proxy:
         os.environ['HTTP_PROXY'] = proxy
