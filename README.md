@@ -19,9 +19,9 @@
 | Shapefile (.zip) | ~112 MB | https://grdc.bafg.de/downloads/GRDC_Watersheds_shp.zip |
 | GeoJSON (.zip) | ~110 MB | https://grdc.bafg.de/downloads/GRDC_Watersheds_geojson.zip |
 
-- 覆盖约 **10,000 个** GRDC 水文站
+- 覆盖约 **11,267 个** GRDC 水文站
 - 每个站点对应一个多边形，表示该站点上游的集水区边界
-- Shapefile 中包含 `GRDC_NO` 字段，可与站点元数据关联
+- Shapefile 自带 `grdc_no`、`river`、`station`、`area`、`altitude`、坐标等 15 个字段
 
 ### 其他相关数据
 
@@ -30,109 +30,79 @@
 | 主要河流流域 (MRB) | 520个全球主要流域 | https://grdc.bafg.de/downloads/GRDC_Major_River_Basins.zip |
 | WMO 流域分区 | WMO 标准流域划分 | https://grdc.bafg.de/downloads/GRDC_WMO_Basins.zip |
 
-### 站点元数据（需手动从 Portal 下载）
+### 站点元数据（完整 26 列版本需从 Portal 手动下载）
+
+本仓库已提供从 Shapefile 提取的站点目录 `GRDC_Station_Catalogue.csv`（11,267 条记录，15 个字段）。
+
+如需 **完整 26 列**（含 Region、Country、Daily/Monthly 数据统计、长期平均流量等），需从 Portal 手动导出：
 
 - **入口**: https://portal.grdc.bafg.de/applications/public.html?publicuser=PublicUser
-- **路径**: 左侧菜单 → Data Download → Stations → 筛选 → 下载
-- **无需注册**，PublicUser 即可访问
+- **路径**: 左侧菜单 → Data Download → Stations → 所有筛选设为 ALL → 导出
+
+> 详细字段定义、Portal API 逆向记录、Shapefile 字段与 Portal 字段映射关系，见 [docs/GRDC_Station_Catalogue_Details.md](docs/GRDC_Station_Catalogue_Details.md)
 
 ## 快速开始
 
-### 1. 创建虚拟环境
+### 环境要求
 
-```bash
-# 使用 conda
-conda create -n grdc python=3.11 -y
-conda activate grdc
+- Python 3.8+
+- conda 环境 `common`（含 geopandas 等地理数据处理库）
 
-# 或使用 venv
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# Linux / macOS
-source .venv/bin/activate
-```
+### 下载数据
 
-### 2. 安装依赖
+```powershell
+# 激活环境
+conda activate common
 
-下载脚本本身只用标准库，**不装依赖也能跑**。如果后续要读取/分析数据：
-
-```bash
-pip install -r requirements.txt
-```
-
-`requirements.txt` 内容：
-
-```
-geopandas>=0.14
-matplotlib>=3.8
-```
-
-### 3. 下载数据
-
-```bash
+# 运行下载脚本
 python download_grdc_watersheds.py
 ```
 
 脚本功能：
-- 交互式选择格式（Shapefile / GeoJSON / 全部）
-- 下载进度显示
+- 下载流域边界 Shapefile / GeoJSON
 - 自动解压
-- 需要代理时在脚本顶部修改 `proxy` 变量
+- 配置代理（默认 `http://127.0.0.1:7890`，可在脚本中关闭）
 
-### 4. 使用数据
+### 使用数据
 
 ```python
 import geopandas as gpd
 
-# 读取流域边界（文件名是时间戳格式，按实际解压结果填写）
-gdf = gpd.read_file("2025-09-18 09-42-59.shp")
+# 读取流域边界
+gdf = gpd.read_file("GRDC_Watersheds.shp")
 
 # 查看字段
 print(gdf.columns)
-# 字段: grdc_no, river, station, area, area_calc, lat_org, long_org, ...
+# 预期字段: GRDC_NO, area_calc, geometry, ...
 
 # 按站点编号筛选
-station = gdf[gdf['grdc_no'] == 6340100]
+station = gdf[gdf['GRDC_NO'] == 6340100]
 
 # 保存为 GeoJSON
 gdf.to_file("GRDC_Watersheds.geojson", driver="GeoJSON")
 ```
 
-## 项目结构
+## 目录结构
 
 ```
-grdc-watersheds-downloader/
-├── README.md                      # 本文件
-├── GRDC数据获取细则.md             # 详细技术文档（供 AI 工具 / Claude Code 参考）
-├── download_grdc_watersheds.py    # 下载脚本（仅依赖标准库）
-├── requirements.txt               # 数据分析依赖（可选）
-├── LICENSE                        # GPL-2.0
-│
-│  --- 以下为下载后生成，已 .gitignore 排除 ---
-├── GRDC_Watersheds_shp.zip        # 流域边界 Shapefile 压缩包 (~112MB)
-└── 2025-xx-xx xx-xx-xx.shp/.dbf/.prj/.shx  # 解压后的 Shapefile
+全球径流数据中心/
+├── README.md                          # 本文件
+├── GRDC数据获取细则.md                  # 详细技术文档，供 AI 工具参考
+├── download_grdc_watersheds.py         # 下载脚本
+├── GRDC_Watersheds_shp.zip             # 下载后：流域边界 Shapefile 压缩包
+└── GRDC_Watersheds/                    # 解压后：流域边界 Shapefile 文件
+    ├── GRDC_Watersheds.shp
+    ├── GRDC_Watersheds.shx
+    ├── GRDC_Watersheds.dbf
+    ├── GRDC_Watersheds.prj
+    └── ...
 ```
 
 ## 常见问题
 
-### Q: 解压后的文件名是时间戳（如 `2025-09-18 09-42-59.shp`）？
+### Q: 官网筛选后找不到下载按钮？
 
-这是 GRDC 官方打包时的命名。文件内容是完整的全球流域边界，可用 `gpd.read_file()` 正常读取。如需重命名：
-
-```bash
-# Windows PowerShell
-Rename-Item "2025-09-18 09-42-59.shp" "GRDC_Watersheds.shp"
-Rename-Item "2025-09-18 09-42-59.dbf" "GRDC_Watersheds.dbf"
-Rename-Item "2025-09-18 09-42-59.shx" "GRDC_Watersheds.shx"
-Rename-Item "2025-09-18 09-42-59.prj" "GRDC_Watersheds.prj"
-```
-
-同一组文件的 `.shp` `.shx` `.dbf` `.prj` 必须保持**相同前缀名**。
-
-### Q: Shapefile 里已有站点元数据，还需要从 Portal 下载吗？
-
-**基本不需要**。下载的 Shapefile 已包含 `grdc_no`（站点编号）、`river`（河流名）、`station`（站名）、`lat_org`/`long_org`（坐标）、`area`（报告面积）、`area_calc`（计算面积）等字段。仅在需要更多字段（如数据起止年份）时才去 Portal 补充。
+GRDC 的流域边界数据**不在 Data Portal 的筛选界面下载**，而是直接提供 ZIP 包下载链接。详见 `GRDC数据获取细则.md` 中的「官网导航路径」章节。
 
 ### Q: 需要代理吗？
 
