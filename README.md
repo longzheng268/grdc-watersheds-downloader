@@ -87,7 +87,7 @@ gdf.to_file("GRDC_Watersheds.geojson", driver="GeoJSON")
 ```
 全球径流数据中心/
 ├── README.md                          # 本文件
-├── GRDC数据获取细则.md                  # 详细技术文档，供 AI 工具参考
+├── docs/GRDC_Data_Acquisition_Guide.md                  # 详细技术文档，供 AI 工具参考
 ├── download_grdc_watersheds.py         # 下载脚本
 ├── GRDC_Watersheds_shp.zip             # 下载后：流域边界 Shapefile 压缩包
 └── GRDC_Watersheds/                    # 解压后：流域边界 Shapefile 文件
@@ -102,7 +102,7 @@ gdf.to_file("GRDC_Watersheds.geojson", driver="GeoJSON")
 
 ### Q: 官网筛选后找不到下载按钮？
 
-GRDC 的流域边界数据**不在 Data Portal 的筛选界面下载**，而是直接提供 ZIP 包下载链接。详见 `GRDC数据获取细则.md` 中的「官网导航路径」章节。
+GRDC 的流域边界数据**不在 Data Portal 的筛选界面下载**，而是直接提供 ZIP 包下载链接。详见 `docs/GRDC_Data_Acquisition_Guide.md` 中的「官网导航路径」章节。
 
 ### Q: 需要代理吗？
 
